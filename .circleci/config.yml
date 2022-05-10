@@ -6,7 +6,7 @@ orbs:
   # aws-cli: circleci/aws-cli@2.0.3
 # Define the jobs we want to run for this project
 jobs:
-  create_infrastructure:  # Choose any name, such as `build`
+ # create_infrastructure:  # Choose any name, such as `build`
       # The primary container, where your job's commands will run
       docker:
         - image: amazon/aws-cli
@@ -19,9 +19,26 @@ jobs:
                 --template-file template.yml \
                 --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
                 --region us-east-1
+   configure_infrastructure: 
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["af:c9:d0:84:6b:23:f3:54:a7:e1:f9:77:f6:3a:ba:78"] # You can get this ID in the section where you registered the SSH Key
+      - run:
+          name: Install dependencies
+          command: |
+            # install the dependencies needed for your playbook
+            apk add --update ansible 
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i inventory.txt main-remote.yml    
 # Sequential workflow
 workflows:
   # Name the workflow
   myWorkflow:
     jobs:
-      - create_infrastructure
+      - configure_infrastructure
+      
